@@ -103,3 +103,38 @@ case $1 in
   "")        menu ;;
   *)         echo "Option inconnue : $1" >&2; usage; exit 1 ;;
 esac
+# ============================================================
+# JALON 3 : analyse_logs
+# ============================================================
+analyse_logs() {
+    local LOG_FILE="$1"
+
+    if [ -z "$LOG_FILE" ]; then
+        LOG_FILE="access.log"
+    fi
+
+    if [ ! -f "$LOG_FILE" ]; then
+        echo "Fichier de log introuvable : $LOG_FILE"
+        echo "Utilisation : ./code/sysdash.sh analyse_logs <fichier.log>"
+        return 1
+    fi
+
+    echo "=== Analyse du log : $LOG_FILE ==="
+    echo ""
+
+    local TOTAL=$(wc -l < "$LOG_FILE")
+    echo "Total de lignes : $TOTAL"
+    echo ""
+
+    echo "Top 10 des IP :"
+    awk '{print $1}' "$LOG_FILE" | sort | uniq -c | sort -rn | head -10 | awk '{printf "   %4d  %s\n", $1, $2}'
+    echo ""
+
+    local UNIQUE_IP=$(awk '{print $1}' "$LOG_FILE" | sort -u | wc -l)
+    echo "Nombre d'IP uniques : $UNIQUE_IP"
+    echo ""
+
+    echo "Codes HTTP les plus frequents :"
+    awk '{print $9}' "$LOG_FILE" | grep -E '^[0-9]{3}$' | sort | uniq -c | sort -rn | head -5 | awk '{printf "   %4d  %s\n", $1, $2}'
+}
+
